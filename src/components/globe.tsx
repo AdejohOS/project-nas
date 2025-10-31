@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   type Mesh,
   TextureLoader,
@@ -23,7 +23,7 @@ const RotatingEarth = () => {
 
   return (
     <mesh ref={globeRef}>
-      <sphereGeometry args={[1.2, 64, 64]} />
+      <sphereGeometry args={[1.2, 32, 32]} />
       <meshStandardMaterial
         map={texture}
         emissiveMap={texture}
@@ -37,28 +37,50 @@ const RotatingEarth = () => {
 };
 
 const Globe = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   return (
     <div
       className="h-full w-full bg-black"
       style={{
         background:
-          "radial-gradient(circle at center, #003049 0%, #0a0a0a 30%)",
+          "radial-gradient(circle at center, #003049 0%, #0a0a0a 40%)",
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 4.5], fov: 45 }}
-        dpr={[1, 2]}
+        camera={{
+          position: [0, 0, isMobile ? 5 : 4.2], // pull camera back on mobile
+          fov: isMobile ? 55 : 45,
+        }}
+        dpr={[1, 1.5]}
         performance={{ min: 0.5 }}
       >
         <ambientLight intensity={0.3} />
         <pointLight position={[5, 3, 5]} intensity={2.5} color="#00ffff" />
         <pointLight position={[-3, -3, -5]} intensity={0.5} color="#88ccff" />
 
-        <Stars radius={100} depth={50} count={5000} factor={4} fade />
+        <Stars
+          radius={100}
+          depth={50}
+          count={isMobile ? 1000 : 4000}
+          factor={isMobile ? 2 : 4}
+          fade
+        />
 
         <RotatingEarth />
 
-        <OrbitControls enableZoom={true} autoRotate enablePan={false} />
+        <OrbitControls
+          enableZoom={!isMobile}
+          autoRotate
+          enablePan={false}
+          autoRotateSpeed={0.3}
+        />
       </Canvas>
     </div>
   );
